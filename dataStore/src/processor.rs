@@ -4,7 +4,6 @@ use solana_program::{
     entrypoint::ProgramResult,
     msg,
     program::{invoke, invoke_signed},
-    program_error::ProgramError,
     pubkey::Pubkey,
     system_instruction,
     sysvar::{rent::Rent, Sysvar},
@@ -14,8 +13,9 @@ use crate::{
     error::DataStoreError,
     instruction::DataStoreInstruction,
     state::{
-        DataStoreAccountMetadata, DataStoreState, DataStoreTypeOption, SerializationStatusOption,
-        DATA_STORE_VERSION, METADATA_SIZE, PDA_SEED,
+        CloseDataStoreArgs, FinalizeDataStoreArgs, InitializeDataStoreArgs, UpdateDataStoreArgs,
+        UpdateDataStoreAuthorityArgs, DataStoreAccountMetadata, DataStoreTypeOption,
+        SerializationStatusOption, METADATA_SIZE, PDA_SEED,
     },
 };
 
@@ -182,10 +182,10 @@ impl Processor {
 
         // Ensure data_account is initialized and not finalized
         match *account_metadata.data_status() {
-            DataStoreState::Uninitialized => {
+            SerializationStatusOption::Uninitialized => {
                 return Err(DataStoreError::NotInitialized.into());
             }
-            DataStoreState::Finalized => {
+            SerializationStatusOption::Finalized => {
                 return Err(DataStoreError::AlreadyFinalized.into());
             }
             _ => (),
@@ -321,7 +321,7 @@ impl Processor {
             DataStoreAccountMetadata::try_from_slice(&metadata_account.try_borrow_data()?)?;
 
         // Ensure data_account is initialized
-        if *account_metadata.data_status() == DataStoreState::Uninitialized {
+        if *account_metadata.data_status() == SerializationStatusOption::Uninitialized {
             return Err(DataStoreError::NotInitialized.into());
         }
 
@@ -348,7 +348,7 @@ impl Processor {
         }
 
         // Update the authority
-        account_metadata.set_authority(*new_authority.key);
+        account_metadata.set_authority(new_authority.key);
         account_metadata.serialize(&mut &mut metadata_account.data.borrow_mut()[..])?;
 
         if args.debug {
@@ -392,10 +392,10 @@ impl Processor {
 
         // Ensure data_account is initialized and not finalized
         match *account_metadata.data_status() {
-            DataStoreState::Uninitialized => {
+            SerializationStatusOption::Uninitialized => {
                 return Err(DataStoreError::NotInitialized.into());
             }
-            DataStoreState::Finalized => {
+            SerializationStatusOption::Finalized => {
                 return Err(DataStoreError::AlreadyFinalized.into());
             }
             _ => (),
@@ -424,7 +424,7 @@ impl Processor {
         }
 
         // Update the data_account
-        account_metadata.set_data_status(DataStoreState::Finalized);
+        account_metadata.set_data_status(SerializationStatusOption::Finalized);
         account_metadata.serialize(&mut &mut metadata_account.data.borrow_mut()[..])?;
 
         if args.debug {
@@ -470,7 +470,7 @@ impl Processor {
             DataStoreAccountMetadata::try_from_slice(&metadata_account.try_borrow_data()?)?;
 
         // Ensure data_account is initialized
-        if *account_metadata.data_status() == DataStoreState::Uninitialized {
+        if *account_metadata.data_status() == SerializationStatusOption::Uninitialized {
             return Err(DataStoreError::NotInitialized.into());
         }
 

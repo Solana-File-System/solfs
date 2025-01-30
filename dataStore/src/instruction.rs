@@ -1,5 +1,6 @@
 use borsh::{BorshDeserialize, BorshSerialize};
-use shank::{ShankInstruction, account};
+use shank::{ShankInstruction};
+
 
 use crate::state::{
     CloseDataStoreArgs, FinalizeDataStoreArgs, InitializeDataStoreArgs, UpdateDataStoreArgs,

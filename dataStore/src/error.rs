@@ -1,8 +1,8 @@
-use num_derive::FromPrimitive;
+use num_traits::FromPrimitive;
 use solana_program::program_error::ProgramError;
 use thiserror::Error;
 
-#[derive(Clone, Debug, Eq, Error, FromPrimitive, PartialEq)]
+#[derive(Clone, Debug, Eq, Error, PartialEq)]
 pub enum DataStoreError {
     #[error("Instruction is not implemented")]
     NotImplemented,
@@ -34,6 +34,44 @@ pub enum DataStoreError {
     InvalidDataType,
     #[error("Data verification failed")]
     DataVerificationFailed,
+    #[error("Invalid instruction data")]
+    InvalidInstructionData,
+}
+
+impl FromPrimitive for DataStoreError {
+    fn from_i64(n: i64) -> Option<Self> {
+        Self::from_u32(n as u32)
+    }
+
+    fn from_u64(n: u64) -> Option<Self> {
+        Self::from_u32(n as u32)
+    }
+
+    fn from_i32(n: i32) -> Option<Self> {
+        Self::from_u32(n as u32)
+    }
+
+    fn from_u32(n: u32) -> Option<Self> {
+        match n {
+            0 => Some(Self::NotImplemented),
+            1 => Some(Self::NotWriteable),
+            2 => Some(Self::NoAccountLength),
+            3 => Some(Self::NonZeroData),
+            4 => Some(Self::NotSigner),
+            5 => Some(Self::InvalidSystemProgram),
+            6 => Some(Self::InvalidAuthority),
+            7 => Some(Self::InvalidPDA),
+            8 => Some(Self::AlreadyInitialized),
+            9 => Some(Self::NotInitialized),
+            10 => Some(Self::AlreadyFinalized),
+            11 => Some(Self::Overflow),
+            12 => Some(Self::InsufficientSpace),
+            13 => Some(Self::InvalidDataType),
+            14 => Some(Self::DataVerificationFailed),
+            15 => Some(Self::InvalidInstructionData),
+            _ => None,
+        }
+    }
 }
 
 impl From<DataStoreError> for ProgramError {
